@@ -1,0 +1,93 @@
+body {
+  background-image: url("/static/images/cover_image.jpg");
+  background-color: #212529;
+  background-position: center top calc(100px + 2rem);
+  background-size: cover;
+  background-repeat: no-repeat;
+  height: 100%;
+}
+
+h1 {
+  font-size: 5rem;
+  }
+  
+.letter {
+  transition: color 1000ms;
+}
+
+h1 h2 {
+  font-family: serif;
+}
+
+.card {
+  margin: 10px;
+  max-width: 20%; /* Adjust this value to control the card size */
+}
+
+.book-list {
+  margin-top: 50px;
+  visibility: hidden;
+}
+
+#book-container {
+  display: flex;
+  flex-wrap: wrap; /* Allow cards to wrap to the next row */
+  justify-content: center; /* Center items horizontally */
+  align-items: center; /* Center items vertically */
+}
+
+.genre-grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.genre-tile {
+  position: relative;
+  text-align: center;
+  cursor: pointer;
+  padding: 10px;
+  transition: transform 0.3s; 
+}
+
+.genre-tile img {
+  width: 200px;
+  height: auto;
+}
+
+.genre-tile img.icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50px;
+  transform: translate(-50%, -50%);
+}
+
+.genre-tile p {
+  position: absolute;
+  bottom: 5px; /* Adjust this value to change the vertical position of the genre name */
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.genre-tile .genre-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  text-align: center;
+  text-decoration: none;
+  color: #333;
+}
+
+.genre-tile:hover {
+  transform: scale(1.1); /* Enlarge the tile on hover */ 
+}
+
+
+
+
+
