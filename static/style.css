@@ -7,9 +7,14 @@ body {
   height: 100%;
 }
 
+.navbar-brand {
+  text-align: center;
+}
+
 h1 {
   font-size: 5rem;
-  }
+  text-align: center;
+}
   
 .letter {
   transition: color 1000ms;
@@ -19,11 +24,6 @@ h1 h2 {
   font-family: serif;
 }
 
-.card {
-  margin: 10px;
-  max-width: 20%; /* Adjust this value to control the card size */
-}
-
 .book-list {
   margin-top: 50px;
   visibility: hidden;
@@ -31,9 +31,57 @@ h1 h2 {
 
 #book-container {
   display: flex;
-  flex-wrap: wrap; /* Allow cards to wrap to the next row */
-  justify-content: center; /* Center items horizontally */
-  align-items: center; /* Center items vertically */
+  flex-wrap: wrap;
+  justify-content: center; 
+  align-items: flex-start; 
+}
+
+.card {
+  margin: 10px;
+  max-width: 20%; 
+  height: 100%;
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+}
+
+.card img {
+  padding-top: 6px;
+  width: 100px;
+  height: auto;
+  flex-grow: 1; 
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+.card-text, .author-text {
+  font-size: 12px;
+  margin: 0; 
+  padding: 0; 
+}
+
+
+.card-body h5 {
+  font-size: 16px; 
+} 
+
+.favorite-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.favorite-button i.fas.fa-star {
+  visibility: visible;
+}
+
+.favorite-button[data-favorite="true"] i.fas.fa-star {
+  visibility: hidden;
 }
 
 .genre-grid-container {
@@ -52,7 +100,7 @@ h1 h2 {
 }
 
 .genre-tile img {
-  width: 200px;
+  width: 175px;
   height: auto;
 }
 
@@ -66,11 +114,11 @@ h1 h2 {
 
 .genre-tile p {
   position: absolute;
-  bottom: 5px; /* Adjust this value to change the vertical position of the genre name */
+  bottom: 5px; 
   left: 0;
   right: 0;
   text-align: center;
-}
+} 
 
 .genre-tile .genre-link {
   position: absolute;
@@ -84,10 +132,9 @@ h1 h2 {
 }
 
 .genre-tile:hover {
-  transform: scale(1.1); /* Enlarge the tile on hover */ 
+  transform: scale(1.1); 
 }
 
-
-
-
-
+.pagination {
+  padding: 10px;
+}

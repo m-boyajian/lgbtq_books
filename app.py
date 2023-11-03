@@ -1,16 +1,12 @@
-from flask import Flask, render_template, redirect, flash, session, g, request, jsonify
-from models import connect_db, db, User
+from flask import Flask, render_template, redirect, flash, request, jsonify, url_for, session 
+from models import connect_db, db, User, Books
 from forms import LoginForm, RegisterForm
-from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
-from flask_login import LoginManager
+from flask_login import LoginManager, login_required, current_user, login_user, logout_user
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 app.app_context().push()
-
-from flask_login import current_user
-from flask_login import login_required
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -25,129 +21,153 @@ import requests
 
 API_KEY = "AIzaSyABwXgHtTnZQ0Y4eZcNuknYiLAL7Epynyw"
 migrate = Migrate(app, db)
-CURR_USER_KEY = "curr_user"
 
 connect_db(app)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 @app.route("/")
 def home_page():
     """"""
-    print(current_user)
-    return render_template("index.html", user=current_user)
+    return render_template("index.html")
 
-@app.route('/session_data')
-def session_data():
-    if CURR_USER_KEY in session:
-        user_id = session[CURR_USER_KEY]
-        return f"User ID in session: {user_id}"
-    else:
-        return "No user in session"
+# ###########User signup/login/logout##############
+@login_manager.user_loader
+def user_loader(user_id):
+    if user_id.isdigit():
+        user = User.query.get(int(user_id))
+        return user
+    return None
 
-
-###########User signup/login/logout##############
-
-@app.before_request
-def add_user_to_global():
-    """If user logged in, add curr user to Flask global."""
-
-    if CURR_USER_KEY in session:
-        g.user = User.query.get(session[CURR_USER_KEY])
-
-    else:
-        g.user = None
-
-def login(user):
-    """Log in user."""
-
-    session[CURR_USER_KEY] = user.id
-
-def logout():
-    """Logout user."""
-
-    if CURR_USER_KEY in session:
-        del session[CURR_USER_KEY]
-
-@app.route('/users/register', methods=["GET", "POST"])
-def handle_registration():
-    """Handle user signup. Create new user and add to DB. Redirect to home page.
-
-    If form not valid, present form.
-
-    If the there already is a user with that username: flash message
-    and re-present form.
-    """
-    if CURR_USER_KEY in session:
-        del session[CURR_USER_KEY]
-    form = RegisterForm()
-
-    if form.validate_on_submit():
-        try:
-            user = User.signup(
-                first_name=form.first_name.data,
-                last_name=form.last_name.data,
-                username=form.username.data,
-                password=form.password.data,
-                email=form.email.data,
-            )
-            db.session.commit()
-
-        except IntegrityError:
-            flash("Username already taken", 'danger')
-            return render_template('register.html', form=form)
-
-        login(user)
-
-        return redirect("/")
-
-    else:
-        return render_template('users/register.html', form=form)
-
-@app.route('/users/login', methods=["GET", "POST"])
-def handle_login():
-    """Handle user login."""
-
+@app.route("/users/login", methods=["GET"])
+def login_form():
+    """Displays the login form."""
     form = LoginForm()
+    return render_template('users/login.html', form=form)
 
+@app.route("/users/login", methods=["POST"])
+def login():
+    """Displays login form. Logs in the current user by processing the form"""
+    form = LoginForm()
     if form.validate_on_submit():
-        user = User.authenticate(form.username.data,
-                                 form.password.data)
-
+        user = User.query.filter_by(username=form.username.data).first()
+        print("Username from form:", form.username.data)
+        print("User from the database:", user)
+        
         if user:
-            login(user)
-            flash(f"Hello, {user.username}!", "success")
-            return redirect("/")
-
+            if login_user(user):
+                print("Login successful")
+                flash(f"Hello, {user.username}!", "success")
+                db.session.commit()  # Commit the transaction to the database
+                return redirect(url_for('profile'))
+            else:
+                print("Login failed")
+                flash("Failed to log in the user.", "danger")
+        else:
+            print("User not found")
+            flash("User not found.", 'danger')
+    else:
         flash("Invalid credentials.", 'danger')
 
     return render_template('users/login.html', form=form)
 
-@app.route('/profile')
+@app.route("/users/logout", methods=["GET"])
+def logout():
+    """Logout the current user."""
+    logout_user()  # Use Flask-Login's logout_user function
+    return redirect(url_for('home_page'))
+
+@app.route('/users/register', methods=["GET", "POST"])
+def handle_registration():
+    """Creates a new user and adds user to the DB. Makes sure username & email are unique."""
+    form = RegisterForm()
+
+    if form.validate_on_submit():
+        # Check if a user with the same username or email already exists
+        existing_user = User.query.filter((User.username == form.username.data) | (User.email == form.email.data)).first()
+
+        if existing_user:
+            flash("Username or email already taken", 'danger')
+            return render_template('users/register.html', form=form)
+
+        user = User.signup(
+            username=form.username.data,
+            password=form.password.data,
+            email=form.email.data,
+        )
+        db.session.commit()
+
+        flash("Registration successful! Please log in.", 'success')
+        return redirect(url_for('login_form'))
+
+    return render_template('users/register.html', form=form)
+
+@app.route('/users/profile', methods=["GET"])
 @login_required
 def profile():
-    # This route is protected and only accessible to logged-in users
-    return render_template('profile.html')
+    if current_user.is_anonymous:
+        flash("You need to log in to see your profile.", 'warning')
+        return redirect(url_for('login'))
+    print("Profile route accessed")
 
-@app.route('/logout')
-def handle_logout():
-    """Handle logout of user."""
+    # Retrieve the current user's favorite books
+    favorite_books = current_user.saved_books
+    
+    return render_template('users/profile.html', favorite_books=favorite_books)
 
-    logout()
+@app.route('/check_favorite', methods=['GET'])
+def check_favorite():
+    title = request.args.get('title')
+    # Implement the logic to check if the book is a favorite for the current user
+    is_favorite = check_if_book_is_favorite(current_user.id, title)
+    return jsonify(is_favorite)
 
-    flash("Logout successful", 'success')
-    return redirect('/login')
+@app.route('/add_to_favorites', methods=['POST'])
+def add_to_favorites():
+    title = request.form.get('title')
+    add_book_to_favorites(current_user.id, title)
+    return jsonify({'message': 'Book added to favorites'})
+
+@app.route('/remove_from_favorites', methods=['POST'])
+def remove_from_favorites():
+    title = request.form.get('title')
+    remove_book_from_favorites(current_user.id, title)
+    return jsonify({'message': 'Book removed from favorites'})
+
+def check_if_book_is_favorite(user_id, title):
+    user = User.query.get(user_id)
+    favorite_books = user.saved_books
+    is_favorite = any(book.title == title for book in favorite_books)
+    return is_favorite
+
+def add_book_to_favorites(user_id, title):
+    user = User.query.get(user_id)
+    book = Books.query.filter_by(title=title).first()
+
+    if user and book:
+        if book not in user.saved_books:
+            user.saved_books.append(book)
+            db.session.commit()
+
+def remove_book_from_favorites(user_id, title):
+    user = User.query.get(user_id)
+    book = Books.query.filter_by(title=title).first()
+
+    if user and book:
+        if book in user.saved_books:
+            user.saved_books.remove(book)
+            db.session.commit()
 
 ###########Search & fetch books##############
-def fetch_books(query):
-    url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={API_KEY}"
+def fetch_books(query, max_results=40, start_index=0):
+    url = f"https://www.googleapis.com/books/v1/volumes?q={query}&maxResults={max_results}&startIndex={start_index}&key={API_KEY}"
     response = requests.get(url)
     return response.json()
 
 def fetch_books_by_genre(genre):
-    query = f"lgbt+subject:{genre}"
+    if genre == "scifi":
+        query = "lgbt+science fiction|lgbt+sci-fi"
+    elif genre == "selfhelp":
+        query = "lgbt+self-help|lgbt+selfcare|lgbt+self-care" 
+    else: query = f"lgbt+{genre}"
     url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={API_KEY}"
     print("Query:", query)
     print("URL:", url)
@@ -162,38 +182,11 @@ def show_genre(genre):
 
 @app.route('/search_results', methods=["GET"])
 def search_books():
-    query = request.args.get('query')  # Get the query from the URL parameters
+    query = request.args.get('query')  # Gets query from the URL parameters
     books_data = fetch_books(query)
     books_list = books_data.get('items', [])
     # Process the data and render a template with the results
     return jsonify(books_data=books_list)
 
-@app.route('/genre/scifi')
-def scifi_fantasy():
-    print("Reached the /genre/{genre} route")
-    return render_template('genre.html', genre='scifi')
-
-@app.route('/genre/romance')
-def romance_pulp():
-    print("Reached the /genre/{genre} route")
-    return render_template('genre.html', genre='romance')
-
-@app.route('/genre/history')
-def history_activism():
-    print("Reached the /genre/{genre} route")
-    return render_template('genre.html', genre='history')
-
-@app.route('/genre/mystery')
-def mystery():
-    print("Reached the /genre/{genre} route")
-    return render_template('genre.html', genre='mystery')
-
-@app.route('/genre/selfcare')
-def selfcare_mentalhealth():
-    print("Reached the /genre/{genre} route")
-    return render_template('genre.html', genre='selfcare')
-
-@app.route('/genre/fiction')
-def fiction():
-    print("Reached the /genre/{genre} route")
-    return render_template('genre.html', genre='fiction')
+if __name__=='__main__':
+    app.run(debug=True)

@@ -21,10 +21,16 @@
     <div class="form-group row">
         {{ field.label(class="col-sm-2 col-form-label") }}
         <div class="col-sm-10">
-            {{ field(class="form-control") }}
+            {% if field.name == "password" %}
+                {{ field(class="form-control", autocomplete="current-password") }}
+            {% else %}
+                {{ field(class="form-control")}}
+            {% endif %}
         </div>
     </div>
     {% endfor %}
     <button class="btn btn-info" type="submit">Login!</button>
 </form>
 {% endblock %}
+
+

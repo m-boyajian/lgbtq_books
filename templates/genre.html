@@ -3,27 +3,35 @@
 {% block title %} {{ genre }} {% endblock %}
 
 {% block content %}
-    <h1>Genre: {{ genre }}</h1>
-    
-    <div class="row">
-        {% for book in books %}
-        <div class="col-md-4">
-            <div class="card mb-3">
-                <img src="{{ book.volumeInfo.imageLinks.thumbnail }}" class="card-img-top" alt="Book Image">
-                <div class="card-body">
-                    <h5 class="card-title">{{ book.volumeInfo.title }}</h5>
-                    <p class="card-text">Author: {{ book.volumeInfo.authors[0] }}</p>
-                    <p class="card-text">Publisher: {{ book.volumeInfo.publisher }}</p>
-                    <a href="{{ book.volumeInfo.previewLink }}" class="btn btn-primary" target="_blank">Read Book</a>
-                </div>
-            </div>
+  <h1> {{ genre }}</h1>
+  
+  <div class="row">
+    {% for book in books %}
+      <div class="card mb-4">
+        <img src="{{ book.volumeInfo.imageLinks.thumbnail|default('URL_TO_DEFAULT_IMAGE_IF_NOT_FOUND') if book.volumeInfo.imageLinks is defined and book.volumeInfo.imageLinks.thumbnail is defined else 'URL_TO_DEFAULT_IMAGE_IF_NOT_FOUND' }}" class="card-img-top" alt="Book Image">
+        <div class="card-body">
+          <h5 class="card-title">{{ book.volumeInfo.title }}</h5>
+          <p class="card-text">Author: {{ book.volumeInfo.authors[0]|default('Author information not available') if book.volumeInfo.authors is defined else 'Author information not available' }}</p>
+          <p class="card-text">Publisher: {{ book.volumeInfo.publisher }}</p>
+          <a href="{{ book.volumeInfo.previewLink }}" class="read-button" target="_blank">Read Book</a>
+          <button class="favorite-button" data-title="{{ book.volumeInfo.title }}" data-favorite="{% if book.isFavorite %}true{% else %}false{% endif %}">
+            <img src="{{ url_for('static', filename='star-regular.svg' ) }}" alt="Outline Star">
+            <img src="{{ url_for('static', filename='star-solid.svg' ) }}" alt="Solid Star" style="display: none">
+          </button>                                       
         </div>
-        {% endfor %}
-    </div>
-    
-    {% if books|length == 0 %}
-        <p>No books found for this genre.</p>
-    {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  
+  {% if books|length == 0 %}
+    <p>No books found for this genre.</p>
+  {% endif %}
+
+  <div class="pagination">
+    <button id="prev-button" class="btn btn-secondary btn-small">Previous</button>
+    <button id="next-button" class="btn btn-primary btn-small">Next</button>
+  </div>
     
 {% endblock %}
+
 

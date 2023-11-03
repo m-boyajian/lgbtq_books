@@ -7,16 +7,19 @@ Register User
 {% block content %}
 <div class="container">
     <h2>Register</h2>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flash-messages">
+            {% for message in messages %}
+            <li class="alert alert-{{ message[1] }}">{{ message[0] }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+
     <form method="POST">
         {{ form.hidden_tag() }}
-        <div class="form-group">
-            {{ form.first_name.label }}
-            {{ form.first_name(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.last_name.label }}
-            {{ form.last_name(class="form-control") }}
-        </div>
         <div class="form-group">
             {{ form.username.label }}
             {{ form.username(class="form-control") }}
