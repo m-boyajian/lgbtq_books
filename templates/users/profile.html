@@ -4,13 +4,13 @@
 
 {% block content %}
   <h1> My Favorite books </h1>
-  
-  <div>
+
+  <div id="favorite-books-container">
     <ul>
       {% for book in favorite_books %}
         <li>{{ book.title }}</li>
       {% endfor %}
     </ul>
   </div>
-    
+
 {% endblock %}

@@ -45,6 +45,7 @@ class User(db.Model, UserMixin):
         """Return the user's ID as a string to satisfy Flask-Login's requirements."""
         return str(self.id)
 
+    @property
     def is_anonymous(self):
         """Return True if the user is anonymous, or False if authenticated."""
         return not self.is_authenticated()
@@ -94,6 +95,8 @@ class Comments(db.Model):
     
 def connect_db(app):
     """Connect to database."""
+    with app.app_context():
+        db.app = app
+        db.init_app(app)
+        db.create_all()
 
-    db.app = app
-    db.init_app(app)

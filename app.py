@@ -1,12 +1,11 @@
 from flask import Flask, render_template, redirect, flash, request, jsonify, url_for, session 
-from models import connect_db, db, User, Books
+from models import connect_db, db, User, Books, Saved_Books
 from forms import LoginForm, RegisterForm
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_required, current_user, login_user, logout_user
-
+import requests
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
-app.app_context().push()
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -29,7 +28,7 @@ def home_page():
     """"""
     return render_template("index.html")
 
-# ###########User signup/login/logout##############
+############User signup/login/logout##############
 @login_manager.user_loader
 def user_loader(user_id):
     if user_id.isdigit():
@@ -120,13 +119,27 @@ def check_favorite():
     is_favorite = check_if_book_is_favorite(current_user.id, title)
     return jsonify(is_favorite)
 
+@app.route('/fetch_favorite_books', methods=['GET'])
+def fetch_favorite_books():
+    user_id = request.args.get('user_id')
+    user = User.query.get(user_id)
+
+    if user:
+        favorite_books = Saved_Books.query.filter_by(user_id=user.id).all()
+        book_titles = [book.book.title for book in favorite_books]
+        return jsonify(favorite_books=[book_titles])
+    else:
+        return jsonify(favorite_books=[])
+
 @app.route('/add_to_favorites', methods=['POST'])
+@login_required
 def add_to_favorites():
     title = request.form.get('title')
     add_book_to_favorites(current_user.id, title)
     return jsonify({'message': 'Book added to favorites'})
 
 @app.route('/remove_from_favorites', methods=['POST'])
+@login_required
 def remove_from_favorites():
     title = request.form.get('title')
     remove_book_from_favorites(current_user.id, title)
@@ -162,30 +175,38 @@ def fetch_books(query, max_results=40, start_index=0):
     response = requests.get(url)
     return response.json()
 
-def fetch_books_by_genre(genre):
+def fetch_books_by_genre(genre, max_results=40, start_index=0):
     if genre == "scifi":
         query = "lgbt+science fiction|lgbt+sci-fi"
     elif genre == "selfhelp":
-        query = "lgbt+self-help|lgbt+selfcare|lgbt+self-care" 
-    else: query = f"lgbt+{genre}"
-    url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={API_KEY}"
+        query = "lgbt+self-help|lgbt+selfcare|lgbt+self-care"
+    else:
+        query = f"lgbt+{genre}" if genre else "lgbt"
+    url = f"https://www.googleapis.com/books/v1/volumes?q={query}&maxResults={max_results}&startIndex={start_index}&key={API_KEY}"
+
     print("Query:", query)
     print("URL:", url)
+
     response = requests.get(url)
-    return response.json()
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return jsonify(error=f"Failed to fetch books. Status code: {response.status_code}")
 
 @app.route('/genre/<genre>')
+@login_required
 def show_genre(genre):
-    books_data = fetch_books_by_genre(genre)
+    books_data = fetch_books_by_genre(genre=genre)
     books_list = books_data.get('items', [])
-    return render_template('genre.html', genre=genre, books=books_list)
+    isFavorite = [check_if_book_is_favorite(current_user.id, book['volumeInfo']['title']) for book in books_list]
+
+    return render_template('genre.html', genre=genre, books=books_list, isFavorite=isFavorite)
 
 @app.route('/search_results', methods=["GET"])
 def search_books():
     query = request.args.get('query')  # Gets query from the URL parameters
     books_data = fetch_books(query)
     books_list = books_data.get('items', [])
-    # Process the data and render a template with the results
     return jsonify(books_data=books_list)
 
 if __name__=='__main__':

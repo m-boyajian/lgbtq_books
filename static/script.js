@@ -1,3 +1,5 @@
+// Script page for h1 title animation
+
 function randomRGB() {
   const r = Math.floor(Math.random() * 256);
   const g = Math.floor(Math.random() * 256);
@@ -34,16 +36,23 @@ const genres = [
 ];
 
 const icons = [
-  "/static/svg-icons/ufo-outline.svg",
   "/static/svg-icons/fire.svg",
+  "/static/svg-icons/ufo-outline.svg",
   "/static/svg-icons/bullhorn-variant-outline.svg",
   "/static/svg-icons/handshake-outline.svg",
   "/static/svg-icons/magnify.svg",
   "/static/svg-icons/book-open-blank-variant.svg",
 ];
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("Script loaded for /genre/<genre> page");
+  
+  const genreCardContainer = document.getElementById("genre-card-container");
+  console.log("Genre card container found", genreCardContainer);
+  // Genre container
+  console.log("Before genreContainer creation");
   const genreContainer = document.getElementById("genre-container");
+  console.log("After genreContainer creation", genreContainer);
 
   if (genreContainer) {
     console.log("Genre container found: ", genreContainer);
@@ -58,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const link = document.createElement("a");
       link.classList.add("genre-link");
-      link.href = `/genre/${genre.name.toLowerCase().replace(/\//g, "_")}`;
+      link.href = `${genre.name.toLowerCase().replace(/\//g, "_")}`;
 
       // Creates image element for the genre image
       const genreImage = document.createElement("img");
@@ -79,17 +88,175 @@ document.addEventListener("DOMContentLoaded", function () {
 
       link.addEventListener("click", function (event) {
         event.preventDefault();
-        console.log("Clicked on genre: " + genreName);
-        window.location.href = link.href; // Redirect to the URL specified in the link
+        const genre = genreName; // Get the selected genre from the data attribute
+        console.log("Clicked on genre: " + genre); 
+        window.location.href = `/genre/${genre.toLowerCase().replace(/\//g, "_")}`;
       });
     });
-  } else {
-    console.log("Genre container not found");
   }
+
+    let currentPage = 1;
+    const booksPerPage = 12;
+
+    async function displayGenreBooks(books) {
+      console.log("Displaying genre books:", books);
+
+      if (!genreCardContainer) {
+        console.error("Genre card container not found");
+        return;
+      }
+    
+      const startIdx = (currentPage - 1) * booksPerPage;
+      const endIdx = startIdx + booksPerPage;
+
+      if (books.length) {
+        genreCardContainer.innerHTML = "";
+
+        for (const book of books.slice(startIdx, endIdx)) {
+          const isFavorite = await checkIfBookIsFavorite(book.volumeInfo.title);
+    
+            console.log("Book Object:", book);
+      
+            const genreBookCard = formatGenreCard(
+              book.volumeInfo.imageLinks.thumbnail,
+              book.volumeInfo.title,
+              book.volumeInfo.authors[0],
+              book.volumeInfo.publisher,
+              book.volumeInfo.previewLink,
+              isFavorite
+            );
+      
+          genreCardContainer.innerHTML += genreBookCard;
+          
+        }
+        genreCardContainer.style.visibility = "visible";
+      } else {
+        console.log("No books received.");
+      }
+      displayGenreBooks([]);
+    }
+
+    function checkIfBookIsFavorite(title) {
+      return new Promise((resolve, reject) => {
+        console.log("Checking if book is a favorite:", title);
+        // Use AJAX to send a request to the server to check if the book is a favorite
+        $.ajax({
+          url: `/check_favorite?title=${title}`, // Define a route in app.py to handle this request
+          type: 'GET',
+          success: function (data) {
+            // The server should return 'true' or 'false' as a response
+            const isFavorite = data === 'true';
+            resolve(isFavorite);
+          },
+          error: function () {
+            // Handle the error or display an error message
+            reject();
+          }
+        });
+      });
+    }
+
+    function fetchBooks(genre, maxResults, startIndex) {
+      console.log("Fetching books by genre:", genre);
+    
+      const bookUrl = `/fetch_books_by_genre?genre=${genre}&max_results=${maxResults}&start_index=${startIndex}`;
+      console.log("API Request URL:", bookUrl);
+    
+      return axios.get(bookUrl)
+        .then(function (response) {
+          console.log("API Response:", response);
+          const books = response.data.items;
+          if (books.length) {
+            console.log("Books received:", books);
+            return books; // Return the books to be used in the next .then block
+          } else {
+            console.log("No books received.");
+            return []; // Return an empty array if no books are received
+          }
+        })
+        .catch(function (error) {
+          console.error("API Request Error:", error);
+          return []; // Return an empty array in case of an error
+        });
+    }
+
+    // Event listener for the star icons
+    document.addEventListener("click", (event) => {  
+
+      const target = event.target;
+      if (target.classList.contains("outline-star") || target.classList.contains("solid-star")) {
+        const button = target.parentElement;
+        const title = button.getAttribute("data-title");
+        const isFavorite = button.getAttribute("data-favorite") === "true";
+
+        if (isFavorite) {
+          // Remove the book from favorites.
+          removeBookFromFavorites(title);
+          button.querySelector(".solid-star").style.display = "none";
+          button.querySelector(".outline-star").style.display = "inline-block";
+          button.setAttribute("data-favorite", "false");
+        } else {
+          // Add the book to favorites.
+          addBookToFavorites(title);
+          button.querySelector(".outline-star").style.display = "none";
+          button.querySelector(".solid-star").style.display = "inline-block";
+          button.setAttribute("data-favorite", "true");
+        }
+      }
+    });
+
+    // AJAX function to add a book to favorites
+    function addBookToFavorites(title) {
+      $.ajax({
+        url: `/add_to_favorites?title=${title}`, // Define a route in app.py to handle this request
+        type: 'POST',
+        success: function (data) {
+            // Handle the success response (e.g., book added to favorites)
+        },
+        error: function () {
+            // Handle the error or display an error message
+        }
+      });
+    }
+
+    // AJAX function to remove a book from favorites
+    function removeBookFromFavorites(title) {
+      $.ajax({
+        url: `/remove_from_favorites?title=${title}`, // Define a route in app.py to handle this request
+        type: 'POST',
+        success: function (data) {
+            // Handle the success response (e.g., book removed from favorites)
+        },
+        error: function () {
+            // Handle the error or display an error message
+        }
+      });
+    }
+
+    let startIndex = 0;
+    const maxResults = 40;
+    // Event listener for the "Next" button
+    $("#next-button").click(function () {
+      startIndex += maxResults;
+      fetchBooks(genre, maxResults, startIndex)
+        .then(books => displayGenreBooks(books));
+    });
+
+    // Event listener for the "Previous" button
+    $("#prev-button").click(function () {
+      if (startIndex - maxResults >= 0) {
+        startIndex -= maxResults;
+        fetchBooks(genre, maxResults, startIndex)
+          .then(books => displayGenreBooks(books));
+      }
+    });
+
 });
 
+// Book card container book results
 if (window.location.pathname === '/') {
   let bookContainer;
+  let searchData;
 
   function formatOutput(imageUrl, title, author, publisher, previewLink, isFavorite) {
     console.log("isFavorite:", isFavorite);
