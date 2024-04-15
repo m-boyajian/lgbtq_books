@@ -6,12 +6,6 @@ from flask_bcrypt import Bcrypt
 bcrypt = Bcrypt()
 db = SQLAlchemy()
 
-saved_books_association = db.Table(
-    'saved_books_association',
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('book_id', db.Integer, db.ForeignKey('books.id'))
-)
-
 class User(db.Model, UserMixin):
 
     __tablename__ = "users"
@@ -20,7 +14,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(20), nullable=False, unique=True)
     email = db.Column(db.String(50), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
-    saved_books = db.relationship('Books', secondary=saved_books_association, backref=db.backref('users', lazy='dynamic'))
+    saved_books = db.relationship('Saved_Books', backref='books', lazy=True)
 
     def __init__(self, username, email, password):
         self.username = username
@@ -49,49 +43,27 @@ class User(db.Model, UserMixin):
     def is_anonymous(self):
         """Return True if the user is anonymous, or False if authenticated."""
         return not self.is_authenticated()
-    
-class Books(db.Model):
-    __tablename__ = "books"
-
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(20), nullable=False)
-    author_id = db.Column(db.Integer, db.ForeignKey('authors.id'))
-    genre_id = db.Column(db.Integer, db.ForeignKey('genres.id'))
-    description = db.Column(db.Text)
-    cover_url = db.Column(db.Text, default="/static/images/unicorn_float.jpg")
-    comments = db.relationship('Comments', backref='books')
-    
-class Genres(db.Model):
-    __tablename__ = "genres"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(40))
-    description = db.Column(db.Text)
-
-class Authors(db.Model):
-    __tablename__ = "authors"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(40))
-    biography = db.Column(db.Text, nullable=True)
 
 class Saved_Books(db.Model):
     __tablename__ = "saved_books"
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    book_id = db.Column(db.Integer, db.ForeignKey('books.id'))
-    date_saved = db.Column(db.DateTime, default=datetime.utcnow)
-    cover_url = db.Column(db.Text, default="/static/images/unicorn_float.jpg")
+    book_title = db.Column(db.Text, nullable=False)
+    is_favorite = db.Column(db.Boolean, default=False)
+    user = db.relationship('User', backref=db.backref('saved_books_entries', cascade='all, delete-orphan'))
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'book_title', name='unique_user_book'),
+    )
 
 class Comments(db.Model):
     __tablename__ = "comments"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    book_id = book_id = db.Column(db.Integer, db.ForeignKey('books.id'))
-    comment_text = db.Column(db.Text, nullable=True)
-    time = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    book_title = db.Column(db.Text, nullable=False)
+    comment_text = db.Column(db.Text, nullable=False)
+    user = db.relationship('User', backref=db.backref('comments', cascade='all, delete-orphan'))
     
 def connect_db(app):
     """Connect to database."""
