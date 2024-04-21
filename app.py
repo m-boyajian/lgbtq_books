@@ -5,7 +5,7 @@ from flask_migrate import Migrate
 from flask_login import LoginManager, login_required, current_user, login_user, logout_user
 from datetime import timedelta
 from sqlalchemy.exc import SQLAlchemyError
-import requests
+import requests, logging
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 login_manager = LoginManager()
@@ -19,6 +19,7 @@ app.config['TESTING'] = True
 app.config['WTF_CSRF_TIME_LIMIT'] = 86400  # CSRF token of one day
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Permanent session lifetime of one week
 app.config['WTF_CSRF_HEADERS'] = ['X-CSRFToken']
+app.logger.setLevel(logging.INFO)
 
 API_KEY = "AIzaSyABwXgHtTnZQ0Y4eZcNuknYiLAL7Epynyw"
 migrate = Migrate(app, db)
@@ -114,6 +115,7 @@ def profile():
     
     return render_template('users/profile.html', favorite_books=favorite_books)
 
+# determines whether a specific book is marked as a favorite for the currently logged-in user
 @app.route('/check_favorite')
 def check_favorite():
     title = request.args.get('title')
@@ -240,33 +242,49 @@ def remove_book_from_favorites(user_id, title):
         print(f"Error removing book from favorites: {str(e)}")
 
 ###########Search & fetch books##############
+# Global variable to store the fetched book data
 def fetch_books(query, max_results=40, start_index=0):
     url = f"https://www.googleapis.com/books/v1/volumes?q={query}&maxResults={max_results}&startIndex={start_index}&key={API_KEY}"
     response = requests.get(url)
     return response.json()
 
+cached_books_data = {} #Storing as a dictionary so the genre can be the key and data the value
+import json
 @app.route('/fetch_books_by_genre/<genre>')
 def fetch_books_by_genre(genre, max_results=40, start_index=0):
-    requested_max_results = request.args.get('max_results', default=40, type=int)
-    page = request.args.get('page', default=1, type=int)
-    start_index = (page - 1) * requested_max_results
     query = f"lgbt+{genre}"
     url = f"https://www.googleapis.com/books/v1/volumes?q={query}&maxResults={max_results}&startIndex={start_index}&key={API_KEY}"
-
     response = requests.get(url)
     response.raise_for_status() 
 
     if response.status_code == 200:
-        return response.json()
+        books_data = response.json()
+        app.logger.info("Cached Books Data: %s", json.dumps(books_data, indent=2))
+        cached_books_data[genre] = books_data
+        return response.json(books_data)
     else:
         current_app.logger.error("Failed to fetch books. Status code: %s", response.status_code)
         return jsonify(error=f"Failed to fetch books. Status code: {response.status_code}")
 
 @app.route('/genre/<genre>')
 def show_genre(genre):
-    books_data = fetch_books_by_genre(genre=genre)
-    current_app.logger.info("Books Data: %s", books_data)
+    page = request.args.get('page', 1, type = int)
+    per_page = 12
+
+    if genre not in cached_books_data:
+        fetch_books_by_genre(genre)
+
+    # Retrieve stored book data
+    books_data = cached_books_data[genre]
+    current_app.logger.info("Cached Books Data: %s", json.dumps(books_data, indent=2))
+    total_items = books_data.get('totalItems', 0)
+    total_pages = (total_items + per_page - 1) // per_page
+
+    start_index = (page - 1) * per_page
+    end_index = min(start_index + per_page, total_items)
+
     books_list = books_data.get('items', [])
+
     if current_user.is_authenticated:
         # If the user is logged in, check for favorites
         isFavorite = [check_if_book_is_favorite(current_user.id, book['volumeInfo']['title']) for book in books_list]
@@ -274,7 +292,7 @@ def show_genre(genre):
         # If the user is not logged in, set all books as not favorite
         isFavorite = [False] * len(books_list)
 
-    return render_template('genre.html', genre=genre, books=books_list, isFavorite=isFavorite)
+    return render_template('genre.html', genre=genre, books=books_list[start_index:end_index], isFavorite=isFavorite, page=page, total_pages=total_pages)
 
 @app.route('/search_results', methods=["GET"])
 def search_books():

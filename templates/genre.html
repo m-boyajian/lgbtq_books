@@ -7,33 +7,35 @@
 
   <div id="genre-card-container" class="row">
     {% for book in books %}
-    <div class="card col-md-4 genre-card">
-      {% if book.volumeInfo and book.volumeInfo.imageLinks %}
-        {% set thumbnail = book.volumeInfo.imageLinks.thumbnail|default('/static/images/unicorn_float.jpg') %}
-        <img src="{{ thumbnail }}" class="card-img-top" alt="Book Image">
-        <div class="card-body">
-          <h5 class="card-title">{{ book.volumeInfo.title }}</h5>
-          <p class="card-text author-text">Author: {{ book.volumeInfo.authors.0 if book.volumeInfo.authors else 'Unknown' }}</p>
-          <p class="card-text">Publisher: {{ book.volumeInfo.publisher if book.volumeInfo.publisher else 'Unknown' }}</p>
-          <p>Is Favorite: {{ isFavorite[loop.index0]|default('false') }}</p>
-          <a href="{{ book.volumeInfo.previewLink }}" class="read-button" target="_blank">Read Book</a>
-          <button class="favorite-button" data-title="{{ book.volumeInfo.title }}" data-favorite="{{ isFavorite[loop.index0]|default('false') }}">
-            <img class="outline-star" src="/static/star-regular.svg" alt="Outline Star">
-            <img class="solid-star" src="/static/star-solid.svg" alt="Solid Star" style="display: none">
-          </button>
-        </div>
-      {% else %}
-        <p>Book information not available</p>
-      {% endif %}
-    </div>
-  {% endfor %}
-
+      <div class="card col-md-4 genre-card">
+        {% if book.volumeInfo and book.volumeInfo.imageLinks %}
+          {% set thumbnail = book.volumeInfo.imageLinks.thumbnail|default('/static/images/unicorn_float.jpg') %}
+          <img src="{{ thumbnail }}" class="card-img-top" alt="Book Image">
+          <div class="card-body">
+            <h5 class="card-title">{{ book.volumeInfo.title }}</h5>
+            <p class="card-text author-text">Author: {{ book.volumeInfo.authors.0 if book.volumeInfo.authors else 'Unknown' }}</p>
+            <p class="card-text">Publisher: {{ book.volumeInfo.publisher if book.volumeInfo.publisher else 'Unknown' }}</p>
+            <p>Is Favorite: {{ isFavorite[loop.index0]|default('false') }}</p>
+            <a href="{{ book.volumeInfo.previewLink }}" class="read-button" target="_blank">Read Book</a>
+            <button class="favorite-button" data-title="{{ book.volumeInfo.title }}" data-favorite="{{ isFavorite[loop.index0]|default('false') }}">
+              <img class="outline-star" src="/static/star-regular.svg" alt="Outline Star">
+              <img class="solid-star" src="/static/star-solid.svg" alt="Solid Star" style="display: none">
+            </button>
+          </div>
+        {% else %}
+          <p>Book information not available</p>
+        {% endif %}
+      </div>
+    {% endfor %}
   </div>
 
   <div class="pagination">
-    <button id="prev-button" class="btn btn-secondary btn-small">Previous</button>
-    <button id="next-button" class a="btn btn-primary btn-small">Next</button>
+    {% if page > 1 %}
+      <a href="{{ url_for('show_genre', genre=genre, page=page-1) }}" class="btn btn-secondary btn-small">Previous</a>
+    {% endif %}
+
+    {% if page < total_pages %}
+      <a href="{{ url_for('show_genre', genre=genre, page=page+1) }}" class="btn btn-primary btn-small">Next</a>
+    {% endif %}
   </div>
 {% endblock %}
-
-
