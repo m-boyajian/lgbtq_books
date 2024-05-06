@@ -12,20 +12,53 @@
     </div> 
 </div>
 
-<div id="genre-container" class="genre-grid-container">
+<div id="genre-container" class="genre-tile-grid">
   <!-- Genre tiles & icon imgs go here -->
 </div>
 
 <div class="book-list">
-  <h4 class="text-center m-2">Search Results</h4>
   <div id="book-container" class="row">
-    <!-- Book cards will go here -->
+    <h1 id="book-title">Search Results</h1>
+    {% for book in books %}
+    <div class="card col-md-4">
+      {% if book.volumeInfo and book.volumeInfo.imageLinks %} 
+      {% set thumbnail = book.volumeInfo.imageLinks.thumbnail|default('/static/images/unicorn_float.jpg') %}
+      <img src="{{ thumbnail }}" class="card-img-top" alt="Book Image" />
+
+      <div class="card-body">
+        <h5 class="card-title">{{ book.volumeInfo.title }}</h5>
+        <p class="card-text author-text">Author: {{ book.volumeInfo.authors.0 if book.volumeInfo.authors else 'Unknown' }}</p>
+        <p class="card-text">Publisher: {{ book.volumeInfo.publisher if book.volumeInfo.publisher else 'Unknown' }}</p>
+        <a href="{{ book.volumeInfo.previewLink }}" class="read-button" target="_blank">Read Book</a>
+
+        <button class="favorite-button" data-title="{{ book.volumeInfo.title }}" data-favorite="{{ isFavorite[loop.index0]|default('false') }}">
+          <img class="outline-star" src="/static/star-regular.svg" alt="Outline Star" />
+          <img class="solid-star" src="/static/star-solid.svg" alt="Solid Star" />
+        </button>
+      </div>
+
+      {% else %}
+      <img src="/static/images/unicorn_float.jpg" class="card-img-top" alt="Default Book Image" />
+      <div class="card-body">
+        <p>Book information not available</p>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
   </div>
 </div>
- 
-<div class="pagination">
-  <button id="prev-button" class="btn btn-secondary btn-small">Previous</button>
-  <button id="next-button" class="btn btn-primary btn-small">Next</button>
+
+<div id="container" data-total-pages="{{ total_pages }}"></div>
+  <div class="pagination-container">
+    <div class="pagination">
+      <a href="{{ url_for('home_page', page=page-1) }}" id="prev-button" class="btn btn-secondary btn-small">Previous</a>
+    
+      {% if page < total_pages %}
+        <a href="{{ url_for('home_page', page=page+1) }}" id="next-button" class="btn btn-primary btn-small">Next</a>
+      {% endif %}
+    
+    </div>
+  </div>
 </div>
 
 {% endblock %}

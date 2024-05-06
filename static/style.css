@@ -6,29 +6,22 @@ body {
   background-repeat: no-repeat;
   height: 100%;
 }
-
-.navbar-brand {
-  text-align: center;
-}
-
-h1 {
-  font-size: 5rem;
-  text-align: center;
-}
   
 .letter {
   transition: color 1000ms;
 }
 
-h1 h2 {
-  font-family: serif;
+#search {
+  margin-top: 8px;
 }
 
-.genre-grid-container {
+/* Styling for genre tiles */
+.genre-tile-grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 10px;
+  grid-gap: 0px;
 }
 
 .genre-tile {
@@ -39,9 +32,10 @@ h1 h2 {
   transition: transform 0.3s; 
 }
 
-.genre-tile img {
+.genre-tile img:not(.icon) {
   width: 175px;
   height: auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .genre-tile img.icon {
@@ -75,56 +69,86 @@ h1 h2 {
   transform: scale(1.1); 
 }
 
-.pagination {
-  padding: 10px;
+/* Styling for pagination */
+.pagination-container {
+  bottom: 10px; 
+  left: 0;
+  width: 100%;
+  padding-left: 10px;
+  padding-bottom: 10px;
 }
 
-#book-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center; 
-  align-items: flex-start; 
+.pagination button {
+  margin-right: 10px;
 }
 
-.book-list {
-  margin-top: 50px;
-  visibility: hidden;
+#prev-button,
+#next-button {
+  display: none;
+}
+
+/* Styling for all containers */
+h1 {
+  font-size: 5rem;
+}
+
+h1 h2 {
+  font-family: serif;
 }
 
 .card {
   margin: 10px;
-  max-width: 20%; 
+  width: calc(25% - 20px);
   height: 100%;
+  flex: 0 0 calc(25% - 20px);
   display: flex; 
   justify-content: center; 
   align-items: center; 
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .card img {
-  padding-top: 6px;
-  width: 100px;
-  height: auto;
+  padding-top: 10px;
+  width: auto;
+  height: 125px;
   flex-grow: 1; 
 }
 
 .card-body {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center; 
+  align-items: center; 
   flex-grow: 1;
+}
+
+.card-title {
+  font-size: 14px;
+  overflow: hidden;
+  white-space: nowrap; 
+  text-overflow: ellipsis;
+  width: 125px;
+  text-align: center;
 }
 
 .card-text, .author-text {
   font-size: 12px;
   margin: 0; 
   padding: 0; 
+  overflow: hidden;
+  white-space: nowrap; 
+  text-overflow: ellipsis;
+  width: 125px;
+  text-align: center;
 }
 
+.card-body .outline-star,
+.card-body .solid-star {
+  width: 50px;
+  height: 50px;
+}
 
-.card-body h5 {
-  font-size: 16px; 
-} 
-
+/* Styling for favorite buttons */
 .favorite-button {
   background: none;
   border: none;
@@ -139,57 +163,68 @@ h1 h2 {
   visibility: hidden;
 }
 
-.genre-card {
-  width: 100%;
-  height: 100%;
+.solid-star {
+  display: none;
+}
+
+/* Styling for book container */
+#book-container {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center; 
+  align-items: flex-start; 
+  padding: 0 14px;
 }
 
-.genre-card img {
-  padding-top: 6px;
-  width: 100px;
-  height: auto;
-  flex-grow: 1; 
-}
-
-.genre-card .card-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex-grow: 1;
-}
-
-.genre-card .card-text,
-.genre-card .author-text {
-  font-size: 12px;
-  margin: 0; 
-  padding: 0; 
-}
-
-.genre-card .card-body h5 {
-  font-size: 16px;
-}
-
-.genre-card .favorite-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.genre-card .favorite-button i.fas.fa-star {
-  visibility: visible;
-}
-
-.genre-card .favorite-button[data-favorite="true"] i.fas.fa-star {
+.book-list {
+  margin-top: 50px;
   visibility: hidden;
 }
 
+#book-title {
+  text-transform: uppercase;
+  font-family: serif;
+  font-size: 30px;
+  text-align: center;
+  padding-top: 20px;
+  margin: 0 auto;
+}
 
+/* Styling for genre card container */
+#genre-card-container {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; 
+  align-items: flex-start; 
+  padding: 0 14px;
+}
 
+#genre-title {
+  text-transform: uppercase;
+  font-family: serif;
+  font-size: 30px;
+  text-align: center;
+  padding-top: 20px;
+  margin: 0 auto;
+}
 
+/* Styling for profile container */
+#profile-title {
+  text-transform: uppercase;
+  font-family: serif;
+  font-size: 30px;
+  text-align: center;
+  padding-top: 20px;
+}
 
-
+#favorite-card-container{
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 14px;
+}
 

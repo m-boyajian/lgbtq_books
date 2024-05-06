@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
 
@@ -14,7 +13,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(20), nullable=False, unique=True)
     email = db.Column(db.String(50), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
-    saved_books = db.relationship('Saved_Books', backref='books', lazy=True)
+    saved_books = db.relationship('Saved_Books', back_populates='user', lazy=True)
 
     def __init__(self, username, email, password):
         self.username = username
@@ -51,7 +50,7 @@ class Saved_Books(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     book_title = db.Column(db.Text, nullable=False)
     is_favorite = db.Column(db.Boolean, default=False)
-    user = db.relationship('User', backref=db.backref('saved_books_entries', cascade='all, delete-orphan'))
+    user = db.relationship('User', back_populates='saved_books', single_parent=True)
     __table_args__ = (
         db.UniqueConstraint('user_id', 'book_title', name='unique_user_book'),
     )

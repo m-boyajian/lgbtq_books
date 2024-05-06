@@ -4,29 +4,38 @@
 
 {% block content %}
 
-  <h1> My Favorite books </h1>
+  <h1 id="profile-title">My Favorite Books</h1>
 
-  <div id="favorite-books-container" class="row">
-    {% for book in favorite_books %}
-      <div class="col-md-4">
-        <div class="card">
-          <img src="{{ book.cover_url }}" class="card-img-top" alt="{{ book.title }} Cover">
+  <div id="favorite-books-container">
+    <div id="favorite-card-container" class="row">
+      {% for book in favorite_books %}
+        <div class="card col-md-4">
+          <img src="{{ book.cover_url }}" id="card-img-top" alt="{{ book.title }} Cover">
           <div class="card-body">
-            <h5 class="card-title">{{ book.title }}</h5>
-            <p class="card-text">Author: {{ book.author }}</p>
+            <p class="card-title">{{ book.title }}</p>
+            <p class="card-text author-text">Author: {{ book.author }}</p>
             <p class="card-text">Publisher: {{ book.publisher }}</p>
-            <!-- Add other information as needed -->
             <a href="{{ book.preview_link }}" class="btn btn-primary" target="_blank">Read Book</a>
-            <!-- Display favorite status -->
             {% if book.is_favorite %}
-              <button class="btn btn-warning favorite-button" data-title="{{ book.title }}" data-author="{{ book.author }}" data-publisher="{{ book.publisher }}" data-cover-url="{{ book.cover_url }}" data-preview-link="{{ book.preview_link }}" data-favorite="true">★</button>
+              <button class="btn btn-warning favorite-button" data-favorite="true">★</button>
             {% else %}
-              <button class="btn btn-outline-warning favorite-button" data-title="{{ book.title }}" data-author="{{ book.author }}" data-publisher="{{ book.publisher }}" data-cover-url="{{ book.cover_url }}" data-preview-link="{{ book.preview_link }}" data-favorite="false">☆</button>
+              <button class="btn btn-outline-warning favorite-button" data-favorite="false">☆</button>
             {% endif %}
           </div>
         </div>
-      </div>
-    {% endfor %}
-  </div>  
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="profile-pagination-container">
+    <div class="pagination">
+      {% if page > 1 %}
+        <a href="{{ url_for('profile', user_id=current_user.id, page=page-1) }}" class="btn btn-secondary btn-small">Previous</a>
+      {% endif %}
+      {% if page < total_pages %}
+        <a href="{{ url_for('profile', user_id=current_user.id, page=page+1) }}" class="btn btn-primary btn-small">Next</a>
+      {% endif %}
+    </div>
+  </div>
 
 {% endblock %}

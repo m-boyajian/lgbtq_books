@@ -3,34 +3,38 @@
 {% block title %} Login User {% endblock %}
 
 {% block content %}
-<h2>Login</h2>
-<form method="POST">
+<div class="container">
+  <h2>Login</h2>
+  <form method="POST">
     {{ form.hidden_tag() }}
 
-    {% for field in form.errors %}
-    <div class="alert alert-danger">{{ field }}:
-        <ul>
-            {% for error in form.errors[field] %}
-            <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-    </div>
+    {% for message in get_flashed_messages() %}
+      {% if message[1] == 'success' %}
+        <div class="alert alert-success">
+          {{ message[0] }}
+        </div>
+      {% elif message[1] == 'danger' %}
+        <div class="alert alert-danger">
+          {{ message[0] }}
+        </div>
+      {% endif %}
     {% endfor %}
 
     {% for field in form if field.widget.input_type != 'hidden' %}
     <div class="form-group row">
-        {{ field.label(class="col-sm-2 col-form-label") }}
-        <div class="col-sm-10">
-            {% if field.name == "password" %}
-                {{ field(class="form-control", autocomplete="current-password") }}
-            {% else %}
-                {{ field(class="form-control")}}
-            {% endif %}
-        </div>
+      {{ field.label(class="col-sm-2 col-form-label") }}
+      <div class="col-sm-10">
+          {% if field.name == "password" %}
+              {{ field(class="form-control", autocomplete="current-password", style="margin-bottom: 10px;") }}
+          {% else %}
+              {{ field(class="form-control", style="margin-bottom: 10px;")}}
+          {% endif %}
+      </div>
     </div>
     {% endfor %}
     <button class="btn btn-info" type="submit">Login!</button>
-</form>
+  </form>
+</div>
 {% endblock %}
 
 
