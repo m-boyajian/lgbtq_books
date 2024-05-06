@@ -17,7 +17,7 @@ CREATE TABLE "comments" (
     "book_title" TEXT NOT NULL,
     "comment_text" TEXT NOT NULL
 );
-ALTER TABLE
-    "saved_books" ADD CONSTRAINT "saved_books_user_id_foreign" FOREIGN KEY("user_id") REFERENCES "user"("id");
-ALTER TABLE
-    "comments" ADD CONSTRAINT "comments_user_id_foreign" FOREIGN KEY("user_id") REFERENCES "user"("id");
+ALTER TABLE "users" ADD COLUMN "saved_books_id" INTEGER;
+ALTER TABLE "saved_books" ADD CONSTRAINT "saved_books_user_id_foreign" FOREIGN KEY("user_id") REFERENCES "users"("id");
+ALTER TABLE "comments" ADD COLUMN "user_id" INTEGER REFERENCES "users"("id");
+ALTER TABLE "comments" ADD CONSTRAINT "comments_user_id_foreign" FOREIGN KEY("user_id") REFERENCES "users"("id");
