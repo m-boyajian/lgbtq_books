@@ -8,3 +8,5 @@ The frontend of the project is made with JavaScript, the backend with Python and
 
 Google Books API base link: 'https://www.googleapis.com/books/v1/volumes?q=LGBTQ'. API fetching done using axios.
 
+Visit the site here: https://lgbtq-books.onrender.com/
+
