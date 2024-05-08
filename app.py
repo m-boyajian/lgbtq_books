@@ -5,16 +5,16 @@ from forms import LoginForm, RegisterForm
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_required, current_user, login_user, logout_user
 from datetime import timedelta
-import requests
+import requests, os
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///lgbtq_books"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("SQLALCHEMY_DATABASE_URI")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ECHO"] = True
-app.config["SECRET_KEY"] = "zyxwvutsrqponmlkjihgfedcba"
 app.config['TESTING'] = True
 app.config['WTF_CSRF_TIME_LIMIT'] = 86400  # CSRF token of one day
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Permanent session lifetime of one week
@@ -25,7 +25,7 @@ app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_FILE_DIR'] = '/Users/MelBoyajian/Desktop/desktop_items/Springboard/Capstone1'
 Session(app)
 
-API_KEY = "AIzaSyABwXgHtTnZQ0Y4eZcNuknYiLAL7Epynyw"
+API_KEY = os.environ.get("API_KEY")
 migrate = Migrate(app, db)
 
 connect_db(app)
@@ -318,6 +318,6 @@ def fetch_by_title(title):
     
 #########################
 if __name__=='__main__':
-    app.run(port=3000)
+    app.run()
 
 
