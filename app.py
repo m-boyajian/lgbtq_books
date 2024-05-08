@@ -22,7 +22,7 @@ app.config['WTF_CSRF_HEADERS'] = ['X-CSRFToken']
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_FILE_DIR'] = '/Users/MelBoyajian/Desktop/desktop_items/Springboard/Capstone1'
+app.config['SESSION_FILE_DIR'] = 'sessions'
 Session(app)
 
 API_KEY = os.environ.get("API_KEY")
